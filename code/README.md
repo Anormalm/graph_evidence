@@ -18,6 +18,12 @@ verifies distractors against each exact sampled query. These changes mean it
 must not be silently presented as the exact table-producing implementation.
 Consult `../docs/PROVENANCE.md` before comparing new output with the paper.
 
+Inference entry points require
+`--acknowledge-new-run-not-paper-reproduction`. Direct inference through
+`groundlm_serialization.py` is disabled; its `generate` mode remains available.
+The API runner refuses to resume into files whose stored model or endpoint does
+not match the requested configuration.
+
 The packaged API runner also uses the HTTP client's standard TLS certificate
 verification. The recovered runner disabled TLS verification; that unsafe
 transport setting is not preserved in the public release copy.
