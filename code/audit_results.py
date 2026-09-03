@@ -368,6 +368,12 @@ def main() -> int:
         )
 
     report = {
+        "audit_metadata": {
+            "status": "reconstructed_audit_not_paper_table_reproduction",
+            "metric_implementation": "corrected_working_snapshot",
+            "CF_M_implementation": "reconstructed_from_camera_ready_definition",
+            "semantic_relabeling_interpretation": "degree_congruent_in_released_code_paper_match_unverified",
+        },
         "dataset": answer_space_profile(),
         "models": {
             model: audit_model(model_results)

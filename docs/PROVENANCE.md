@@ -105,3 +105,10 @@ artifact or a reviewer answer claims more than the available evidence supports.
 - Decide whether to publish raw generations in Git or as a versioned release
   asset, after removing private provider metadata.
 - Add a software license and citation metadata.
+
+## Public-release interpretation
+
+The prioritized claim boundary is maintained in `../RELEASE_STATUS.md`; the
+machine-readable status is in `../protocol_manifest.json`. New runner outputs
+carry a `run_manifest.json` and an explicit non-reproduction label. These
+release safeguards do not resolve any historical provenance gap.

@@ -17,6 +17,7 @@ from groundlm_serialization import (  # noqa: E402
     compute_answer_for_source_nodes,
     compute_ground_truth,
     generate_graphs,
+    generate_all_prompts,
     relabel_misleading,
 )
 
@@ -44,6 +45,22 @@ class ProtocolTests(unittest.TestCase):
             self.assertEqual(
                 graph.degree(hub_source), max(dict(graph.degree()).values())
             )
+
+    def test_semantic_prompts_carry_unverified_intervention_status(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as output_dir:
+            prompts = generate_all_prompts(output_dir)
+        semantic = [
+            record
+            for record in prompts["isomorphism_consistency"]
+            if record["perturbation"] == "misleading_relabel"
+        ]
+        self.assertEqual(len(semantic), 1200)
+        self.assertEqual(
+            {record.get("intervention_status") for record in semantic},
+            {"degree_congruent_semantic_names_unverified_against_paper"},
+        )
 
     def test_all_distractors_preserve_exact_query_answers(self):
         for graph_info in generate_graphs():

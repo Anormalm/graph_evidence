@@ -506,7 +506,11 @@ def relabel_neutral(G: nx.Graph) -> Tuple[nx.Graph, Dict]:
 
 
 def relabel_misleading(G: nx.Graph) -> Tuple[nx.Graph, Dict]:
-    """Relabel nodes with misleading semantic names based on degree."""
+    """Apply the recovered degree-congruent semantic-name mapping.
+
+    The historical function name is retained for file compatibility. This is
+    not a verified implementation of the paper's role-incongruent intervention.
+    """
     # Sort by degree descending
     nodes_by_deg = sorted(G.nodes(), key=lambda n: G.degree(n), reverse=True)
     semantic_names = ["Hub", "Center", "Bridge", "Anchor", "Core",
@@ -750,7 +754,8 @@ def generate_all_prompts(output_dir: str = OUTPUT_DIR, use_expanded: bool = Fals
                     "relabel_mapping": mapping,
                 })
 
-                # Misleading semantic relabeling
+                # Recovered degree-congruent semantic-name relabeling. The
+                # historical perturbation key is retained for compatibility.
                 G_mis, mapping_mis = relabel_misleading(G)
                 new_query_mis = remap_query(query, mapping_mis)
                 new_source_mis = [mapping_mis.get(s, s) for s in source_nodes]
@@ -771,6 +776,7 @@ def generate_all_prompts(output_dir: str = OUTPUT_DIR, use_expanded: bool = Fals
                     "group_key": f"{instance_key}|misleading_relabel",
                     "base_key": base_key,
                     "relabel_mapping": mapping_mis,
+                    "intervention_status": "degree_congruent_semantic_names_unverified_against_paper",
                 })
 
                 # ─── RQ4: Distractor Robustness ───
@@ -1447,12 +1453,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "generate":
         # Only generate prompts, don't run inference
         generate_all_prompts()
-    elif len(sys.argv) > 1 and sys.argv[1] == "gpt":
-        # Only run GPT-4o-mini
-        all_prompts = generate_all_prompts()
-        for rq_name in ["format_stability", "order_sensitivity", "isomorphism_consistency", "distractor_robustness"]:
-            results_file = os.path.join(OUTPUT_DIR, f"results_gpt-4o-mini_{rq_name}.json")
-            if not os.path.exists(results_file):
-                query_openai(all_prompts[rq_name], model="gpt-4o-mini", output_file=results_file)
     else:
-        run_experiments()
+        raise SystemExit(
+            "Direct inference from groundlm_serialization.py is disabled in the "
+            "public artifact because it lacks complete run provenance. Use "
+            "run_api_models.py or run_qwen_local.py after reading RELEASE_STATUS.md. "
+            "Prompt-only generation remains available with: "
+            "python groundlm_serialization.py generate"
+        )

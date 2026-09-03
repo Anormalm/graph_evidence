@@ -28,7 +28,8 @@ as a verified role-incongruent intervention.
 
 This repository does not claim bit-for-bit numerical reproduction until the
 original results are recovered and audited. See
-[docs/PROVENANCE.md](docs/PROVENANCE.md) for the full record.
+[RELEASE_STATUS.md](RELEASE_STATUS.md) for the claim boundary and prioritized
+risk register, and [docs/PROVENANCE.md](docs/PROVENANCE.md) for the full record.
 
 ## Run the code checks
 
@@ -42,6 +43,10 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 ```
+
+`requirements.txt` gives supported ranges. `requirements-lock.txt` records the
+exact clean-checkout verification environment for this release; it is not the
+unrecovered historical experiment environment.
 
 On Windows, the same check can be run from the repository root with:
 
@@ -59,6 +64,7 @@ cd code
 python run_api_models.py \
   --model deepseek/deepseek-v4-flash \
   --endpoint openrouter \
+  --acknowledge-new-run-not-paper-reproduction \
   --output-dir ../results
 ```
 
@@ -76,5 +82,12 @@ python audit_results.py --results-dir ../results \
 ```
 
 The auditor reports diagnostic point estimates and intervals, per-format parse
-rates, answer-space distributions, per-task Cohen's kappa, `CF_M`, and
-candidate distance-3 semantic-relabeling failures.
+rates, answer-space distributions, per-task Cohen's kappa, a reconstructed
+`CF_M`, and candidate distance-3 semantic-relabeling failures. Its JSON output
+is explicitly marked as a reconstructed audit rather than the paper-producing
+analysis.
+
+## License
+
+Code is released under the [MIT License](LICENSE). Paper text, model outputs,
+and third-party materials are not relicensed by this repository.
