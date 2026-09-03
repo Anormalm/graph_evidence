@@ -2,7 +2,7 @@
 Run Qwen3-8B local inference for Graph Serialization Faithfulness.
 
 Usage:
-  python3 run_qwen_local.py                                    # Qwen3-8B on GPU/MPS
+  python3 run_qwen_local.py --acknowledge-new-run-not-paper-reproduction
   python3 run_qwen_local.py --model-path /path/to/model        # custom path
   python3 run_qwen_local.py --device cpu                       # force CPU
   python3 run_qwen_local.py --no-vllm                          # use transformers
@@ -23,6 +23,9 @@ import json
 import time
 import sys
 import argparse
+from datetime import datetime, timezone
+import platform
+import subprocess
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -178,11 +181,43 @@ def main():
     parser.add_argument("--max-concurrent", type=int, default=8, help="Concurrency for vLLM")
     parser.add_argument("--no-vllm", action="store_true", help="Skip vLLM, use transformers")
     parser.add_argument("--output-dir", default="./groundlm_output_v2", help="Output directory")
+    parser.add_argument(
+        "--acknowledge-new-run-not-paper-reproduction",
+        action="store_true",
+        help="Required acknowledgement that this is a new run of a historical runner",
+    )
     args = parser.parse_args()
+
+    if not args.acknowledge_new_run_not_paper_reproduction:
+        parser.error(
+            "This historical Qwen3-8B runner is not the reported Qwen3.6-35B-A3B "
+            "configuration. Read RELEASE_STATUS.md, then pass "
+            "--acknowledge-new-run-not-paper-reproduction."
+        )
 
     output_dir = args.output_dir
     os.makedirs(output_dir, exist_ok=True)
     use_vllm = not args.no_vllm
+    try:
+        revision = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=os.path.dirname(__file__), text=True
+        ).strip()
+    except (OSError, subprocess.SubprocessError):
+        revision = None
+    run_manifest = {
+        "artifact_claim": "new_run_of_historical_qwen3_8b_runner_not_paper_table_reproduction",
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "git_revision": revision,
+        "python": platform.python_version(),
+        "model_path": os.path.abspath(args.model_path),
+        "engine": "transformers" if args.no_vllm else "vllm_with_transformers_fallback",
+        "device": args.device,
+        "generation": {"do_sample": False, "maximum_new_tokens": 512},
+        "thinking_mode": "disabled",
+        "semantic_relabeling": "degree_congruent_semantic_names_unverified_against_paper",
+    }
+    with open(os.path.join(output_dir, "run_manifest.json"), "w", encoding="utf-8") as handle:
+        json.dump(run_manifest, handle, indent=2, sort_keys=True)
 
     # Step 1: Generate prompts
     print("=" * 60)
@@ -220,7 +255,7 @@ def main():
 
     # Step 4: Compute faithfulness metrics
     print("\n" + "=" * 60)
-    print("Step 4: Computing faithfulness metrics...")
+    print("Step 4: Computing diagnostics for this new run...")
     print("=" * 60)
 
     metrics = {}
@@ -231,7 +266,7 @@ def main():
 
     # Print main result table
     print("\n" + "=" * 80)
-    print("MAIN RESULT TABLE — Qwen3-8B (non-thinking)")
+    print("NEW-RUN DIAGNOSTICS (NOT PAPER REPRODUCTION) — Qwen3-8B")
     print("=" * 80)
 
     fs = metrics["FS"]["FS"]
@@ -279,6 +314,7 @@ def main():
 
     # Save metrics
     summary = {
+        "artifact_claim": "new_run_of_historical_qwen3_8b_runner_not_paper_table_reproduction",
         "model": "Qwen3-8B",
         "mode": "non-thinking",
         "accuracy": accuracy,
