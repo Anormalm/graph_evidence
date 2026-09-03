@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+
+# Raw model generations can be large and may contain provider metadata.
+results/results_*.json
+results/all_prompts_full.json
+results/prompts_*.jsonl
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

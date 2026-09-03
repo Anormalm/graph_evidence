@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this artifact, please cite the accompanying GroundLM 2026 paper."
+title: "Graph Evidence Is Not Text Evidence: Evaluation Code"
+type: software
+authors:
+  - family-names: Hu
+    given-names: Lifan
+    email: lifan.hu@u.nus.edu
+    affiliation: National University of Singapore
+version: 1.0.0
+date-released: 2026-09-04
+repository-code: "https://github.com/Anormalm/graph_evidence"
