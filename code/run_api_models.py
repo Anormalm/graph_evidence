@@ -24,6 +24,9 @@ import time
 import sys
 import asyncio
 import argparse
+from datetime import datetime, timezone
+import platform
+import subprocess
 
 # Add parent dir if needed
 sys.path.insert(0, os.path.dirname(__file__))
@@ -221,6 +224,29 @@ async def run_all(model="gpt-5.4-mini-2026-03-17", endpoint="openai",
     print("=" * 60)
     all_prompts = generate_all_prompts(output_dir, use_expanded=use_expanded)
 
+    try:
+        revision = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=os.path.dirname(__file__), text=True
+        ).strip()
+    except (OSError, subprocess.SubprocessError):
+        revision = None
+    run_manifest = {
+        "artifact_claim": "new_run_of_released_protocol_not_paper_table_reproduction",
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "git_revision": revision,
+        "python": platform.python_version(),
+        "requested_model_id": model,
+        "endpoint": endpoint,
+        "temperature": 0.0,
+        "maximum_completion_tokens": 256,
+        "expanded_graphs": use_expanded,
+        "semantic_relabeling": "degree_congruent_semantic_names_unverified_against_paper",
+        "reasoning_setting": "explicitly_disabled_for_qwen_and_deepseek_only; otherwise_unspecified",
+        "prompt_counts": {name: len(prompts) for name, prompts in all_prompts.items()},
+    }
+    with open(os.path.join(output_dir, "run_manifest.json"), "w", encoding="utf-8") as handle:
+        json.dump(run_manifest, handle, indent=2, sort_keys=True)
+
     # Step 2: Run inference for each RQ
     print("\n" + "=" * 60)
     print(f"Step 2: Running {model} via {endpoint}...")
@@ -235,6 +261,15 @@ async def run_all(model="gpt-5.4-mini-2026-03-17", endpoint="openai",
         if os.path.exists(results_file):
             with open(results_file) as f:
                 existing = json.load(f)
+            incompatible = [
+                record for record in existing
+                if record.get("model") != model or record.get("endpoint") != endpoint
+            ]
+            if incompatible:
+                raise RuntimeError(
+                    f"Refusing to mix {len(incompatible)} existing records with "
+                    f"requested model={model!r}, endpoint={endpoint!r}: {results_file}"
+                )
             if len(existing) == len(prompts):
                 print(f"\n  {rq_name}: Loading existing results ({len(existing)}) from {results_file}")
                 results = existing
@@ -284,7 +319,7 @@ async def run_all(model="gpt-5.4-mini-2026-03-17", endpoint="openai",
 
     # Step 4: Compute faithfulness metrics
     print("\n" + "=" * 60)
-    print("Step 4: Computing faithfulness metrics...")
+    print("Step 4: Computing diagnostics for this new run...")
     print("=" * 60)
 
     metrics = {}
@@ -295,7 +330,7 @@ async def run_all(model="gpt-5.4-mini-2026-03-17", endpoint="openai",
 
     # Step 5: Print results
     print("\n" + "=" * 80)
-    print(f"MAIN RESULT TABLE — {model}")
+    print(f"NEW-RUN DIAGNOSTICS (NOT PAPER REPRODUCTION) — {model}")
     print("=" * 80)
 
     fs = metrics["FS"]["FS"]
@@ -353,6 +388,7 @@ async def run_all(model="gpt-5.4-mini-2026-03-17", endpoint="openai",
 
     # Save metrics
     summary = {
+        "artifact_claim": "new_run_of_released_protocol_not_paper_table_reproduction",
         "model": short,
         "model_id": model,
         "endpoint": endpoint,
@@ -388,7 +424,19 @@ if __name__ == "__main__":
                         help="API endpoint: 'openai', 'bytedance', or 'openrouter'")
     parser.add_argument("--expanded", action="store_true", help="Use expanded graph types")
     parser.add_argument("--output-dir", type=str, default="./groundlm_output_v2", help="Output directory")
+    parser.add_argument(
+        "--acknowledge-new-run-not-paper-reproduction",
+        action="store_true",
+        help="Required acknowledgement that this run cannot reproduce the paper table",
+    )
     args = parser.parse_args()
+
+    if not args.acknowledge_new_run_not_paper_reproduction:
+        parser.error(
+            "This released snapshot is not the verified paper-producing protocol. "
+            "Read RELEASE_STATUS.md, then pass "
+            "--acknowledge-new-run-not-paper-reproduction to launch a new run."
+        )
 
     # Check API key based on endpoint
     if args.endpoint == "bytedance":
