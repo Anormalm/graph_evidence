@@ -1,0 +1,24 @@
+{
+  "artifact_status": "partial_research_artifact",
+  "paper_table_reproduction_status": "blocked_missing_historical_outputs_and_code",
+  "source_commit": "dae0ecd26b5d10a6a3ce5a3f9c4fb600f9f0e2c9",
+  "released_protocol": "audited_working_snapshot",
+  "seed": 42,
+  "graphs": 100,
+  "query_instances": 1200,
+  "prompts_per_model": 16800,
+  "semantic_relabeling": {
+    "implementation": "degree_congruent_semantic_names",
+    "paper_intervention_match": "unverified",
+    "hub_assignment": "maximum_degree_node"
+  },
+  "conditional_faithfulness": {
+    "implementation": "reconstructed_from_camera_ready_definition",
+    "paper_implementation_recovered": false
+  },
+  "raw_paper_generations_present": false,
+  "known_duplicate_distractors": [
+    ["disconnected_component", "disconnected_triangle"]
+  ],
+  "authoritative_limitations": "RELEASE_STATUS.md"
+}
